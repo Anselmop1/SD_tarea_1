@@ -1,0 +1,53 @@
+version: '3.7'
+services:
+
+  server:
+    container_name: server-http
+    build: ./Server
+    depends_on:
+      - grpc_server
+      - redis
+      - redis2
+      - redis3
+    ports:
+      - "3000:5000"  
+
+  grpc_server:
+    container_name: server-grpc
+    build: ./gRPC
+    ports:
+      - "8000:50051" 
+  redis:
+    container_name: redis_1_master
+    image: bitnami/redis:7.0.4
+    restart: always
+    ports:
+      - "7000:6379"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_REPLICATION_MODE=master
+    command: /opt/bitnami/scripts/redis/run.sh --maxmemory 2mb --maxmemory-policy allkeys-lfu
+  
+  redis2:
+    image: bitnami/redis:7.0.4
+    container_name: redis_2
+    ports:
+      - "7001:6379"
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_MASTER_PORT_NUMBER=6379
+    restart: always
+
+  redis3:
+    image: bitnami/redis:7.0.4
+    container_name: redis_3
+    ports:
+      - "7002:6379"
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_MASTER_PORT_NUMBER=6379
+    restart: always
